@@ -132,7 +132,7 @@ If it is not a traditional error message, only answer "Yes" if it sounds like it
     const validation_result = await codioIDE.coachBot.ask({
         systemPrompt: "You are a helpful assistant.",
         userPrompt: valPrompt
-    }, {preventMenu: true})
+    }, {stream:false, preventMenu: true})
 
     if (validation_result.result.includes("Yes")) {
         //Define your assistant's userPrompt - this is where you will provide all the context you collected along with the task you want the LLM to generate text for.
