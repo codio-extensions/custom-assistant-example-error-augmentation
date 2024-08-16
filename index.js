@@ -88,20 +88,35 @@ potential fixes or solutions
 - When referring to code in your explanation, use markdown syntax - wrap inline code with \` and
 multiline code with \`\`\`
   `
-  
+    
+  codioIDE.onErrorState((isError, error) => {
+    console.log('codioIDE.onErrorState', {isError, error})
+    if (isError) {
+      codioIDE.coachBot.showTooltip("I can help explain this error...", () => {
+        codioIDE.coachBot.open({id: "errorAugmentButton"})
+      })
+    }
+  })
+
   // register(id: unique button id, name: name of button visible in Coach, function: function to call when button is clicked) 
   codioIDE.coachBot.register("errorAugmentButton", "Explain this error message", onButtonPress)
 
   async function onButtonPress() {
     // Function that automatically collects all available context 
     // returns the following object: {guidesPage, assignmentData, files, error}
-    const context = await codioIDE.coachBot.getContext()
-    
-    console.log('bot context', context)
-    
-    const input = await codioIDE.coachBot.input("Please paste the error message you want me to explain!")
-    console.log(input)
 
+    let context = await codioIDE.coachBot.getContext()
+    console.log(context)
+
+    let userError = undefined
+    let input
+    if (context.error.errorState == true) {
+        input = context.error.text
+    } else {
+        input = await codioIDE.coachBot.input("Please paste the error message you want me to explain!")
+    }
+
+    console.log(input)
     const valPrompt = `<Instructions>
 
 Please determine whether the following text appears to be a programming error message or not:
