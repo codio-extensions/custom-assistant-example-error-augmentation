@@ -101,6 +101,10 @@ multiline code with \`\`\`
   // register(id: unique button id, name: name of button visible in Coach, function: function to call when button is clicked) 
   codioIDE.coachBot.register("errorAugmentButton", "Explain this error message", onButtonPress)
 
+  // This variable decides whether or not the context error message will be automatically applied
+  // Will only happen once, when the error is first detected, goes back to deafult behaviour the following times
+  let context_count = 0
+
   async function onButtonPress() {
     // Function that automatically collects all available context 
     // returns the following object: {guidesPage, assignmentData, files, error}
@@ -108,14 +112,28 @@ multiline code with \`\`\`
     let context = await codioIDE.coachBot.getContext()
     console.log(context)
 
-    let userError = undefined
     let input
-    if (context.error.errorState == true) {
-        input = context.error.text
-    } else {
-        input = await codioIDE.coachBot.input("Please paste the error message you want me to explain!")
-    }
 
+    if (context.error.errorState == true && context_count == 0) {
+      context_count = 1
+      input = context.error.text
+      codioIDE.coachBot.write("Please paste the error message you want me to explain!")
+      codioIDE.coachBot.write(context.error.text, codioIDE.coachBot.MESSAGE_ROLES.USER)
+    } else {
+      context_count = 0
+
+      try {
+        input = await codioIDE.coachBot.input("Please paste the error message you want me to explain!")
+      }  catch (e) {
+          if (e.message == "Cancelled") {
+            codioIDE.coachBot.write("Please feel free to have any other error messages explained!")
+            codioIDE.coachBot.showMenu()
+            return
+          }
+      }
+    }
+   
+    
     console.log(input)
     const valPrompt = `<Instructions>
 
@@ -174,10 +192,10 @@ With the available context, follow the guidelines and respond with either the te
 If generating your own explanation, make sure it is not longer than 2-3 sentences, and double check that it does not suggest any fixes or solutions. 
 The explanation should only describe the cause of the error. Do not tell the student whether or not it matches. Just provide the explanation in either case only.`
 
-        const result = await codioIDE.coachBot.ask({
-            systemPrompt: systemPrompt,
-            userPrompt: userPrompt
-        })
+      const result = await codioIDE.coachBot.ask({
+        systemPrompt: systemPrompt,
+        messages: [{"role": "user", "content": userPrompt}]
+      })
     }
     else {
         codioIDE.coachBot.write("This doesn't look like an error. I'm sorry, I can only help you by explaining programming error messages.")
