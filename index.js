@@ -4,87 +4,13 @@
   
   // Refer to Anthropic's guide on system prompts: https://docs.anthropic.com/claude/docs/system-prompts
   const systemPrompt = `You are a helpful assistant helping students understand programming error messages.
-Here are some common programming errors followed by their respective explanations written by a teacher:
-
-<generalized_errors>
-<generalized_error id=1>
-Error:
-cannot find symbol
-
-Explanation:
-Variables and methods (sometimes referred to as functions) must be declared before they can be accessed.
-
-For variables this could look like:
-dog = "Rover"
-print(dog) 
-
-Variables can also hold structures such as:
-\`\`\`
-String\\[\\] names = {"Annie", "Bianca", " Caroline"};
-System.out.println(names\\[1\\]);
-\`\`\`
-
-Do you see the declaration? Check your spelling!
-The compiler counts different spellings as different variables.
-
-Method calls must match both the method name and the parameters.
-
-If a class is missing, you may be missing an import statement.
-</generalized_error>
-<generalized_error id=2>
-Error:
-list index out of range
-
-Explanation:
-Arrays start at index 0. That means an array of size 10 (e.g. int[] nums = new int[10];) has indices from 0 to 9.
-
-Out of bound errors are often off-by-one errors. Check that you are not accessing one past the end of the array.
-
-For example, take these two different versions of looping over the array from above:
-\`\`\`
-for(int i=0; i < nums.length; i++)
-{ 
-    System.out.println(nums[i]); 
-}
-
-for(int i=0; i <= nums.length-1; i++)
-{ 
-    System.out.println(nums[i]); 
-}
-\`\`\`
-
-However, if you include the = without the -1 you get an error:
-\`\`\`
-for(int i=0; i <= nums.length; i++)
-{ 
-    System.out.println(nums[i]); 
-}
-\`\`\`
-</generalized_error>
-<generalized_error id=3>
-Error:
-Could not find or load main class
-
-Explanation:
-The main class is the class which contains the main method. Computers need a main method to know where to start running the code.
-
-For example, in Java the main method is declared as:
-\`\`\`
-public static void main(String args\[\]) {...}
-\`\`\`
-</generalized_error>
-</generalized_errors>
 
 You will be provided with a programming error message in the <error_message> tag.
-First, check if the <error_message> matches any of the <generalized_errors>. If so, output the provided 
-corresponding teacher explanation inside the explanation tag in markdown format, without generating a new explanation and without xml tags.
 
 If the error message does not match any of the generalized ones:
 - Carefully review the <assignment> and <code>, if provided, to understand the context of the error
-- Explain in plain, non-technical language what is causing the error, without suggesting any
-potential fixes or solutions
+- Explain what is causing the error, and provide possible fixes and solutions as code snippets in markdown format
 - If relevant, mention any common misconceptions that may be contributing to the student's error
-- For relatively simple errors, keep your explanation brief and to the point
 - When referring to code in your explanation, use markdown syntax - wrap inline code with \` and
 multiline code with \`\`\`
   `
@@ -93,19 +19,15 @@ multiline code with \`\`\`
     console.log('codioIDE.onErrorState', {isError, error})
     if (isError) {
       codioIDE.coachBot.showTooltip("I can help explain this error...", () => {
-        codioIDE.coachBot.open({id: "errorAugmentButton"})
+        codioIDE.coachBot.open({id: "errorAugmentButton", params: "tooltip"})
       })
     }
   })
 
   // register(id: unique button id, name: name of button visible in Coach, function: function to call when button is clicked) 
-  codioIDE.coachBot.register("errorAugmentButton", "Explain this error message", onButtonPress)
+  codioIDE.coachBot.register("errorAugmentButton", "Test Custom Error Explanation", onButtonPress)
 
-  // This variable decides whether or not the context error message will be automatically applied
-  // Will only happen once, when the error is first detected, goes back to deafult behaviour the following times
-  let context_count = 0
-
-  async function onButtonPress() {
+  async function onButtonPress(params) {
     // Function that automatically collects all available context 
     // returns the following object: {guidesPage, assignmentData, files, error}
 
@@ -114,13 +36,11 @@ multiline code with \`\`\`
 
     let input
 
-    if (context.error.errorState == true && context_count == 0) {
-      context_count = 1
+    if (params == "tooltip") { 
       input = context.error.text
       codioIDE.coachBot.write("Please paste the error message you want me to explain!")
       codioIDE.coachBot.write(context.error.text, codioIDE.coachBot.MESSAGE_ROLES.USER)
     } else {
-      context_count = 0
 
       try {
         input = await codioIDE.coachBot.input("Please paste the error message you want me to explain!")
