@@ -38,7 +38,6 @@ multiline code with \`\`\`
 
     if (params == "tooltip") { 
       input = context.error.text
-      codioIDE.coachBot.write("Please paste the error message you want me to explain!")
       codioIDE.coachBot.write(context.error.text, codioIDE.coachBot.MESSAGE_ROLES.USER)
     } else {
 
